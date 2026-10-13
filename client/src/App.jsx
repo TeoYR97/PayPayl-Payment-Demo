@@ -1,23 +1,22 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import completepayment from './pages/completepayment';
-import cancelpayment from './pages/cancelpayment';
-import paypalpayment from './components/paypalpayment';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import CompletePayment from "./pages/completepayment.jsx";
+import CancelPayment from "./pages/cancelpayment.jsx";
+import PayPalPayment from "./component/paypalpayment.jsx";
 
 function App() {
-
   return (
-    <Router>
+    <BrowserRouter>
       <div className="App">
         <h1>PayPal Payment Demo</h1>
+
         <Routes>
-          <Route path="/complete" element={<completepayment />} />
-          <Route path="/cancel" element={<cancelpayment />} />
-          <Route path="/paypal" element={<paypalpayment />} />
+          <Route path="/complete" element={<CompletePayment />} />
+          <Route path="/cancel" element={<CancelPayment />} />
+          <Route path="/paypal" element={<PayPalPayment />} />
         </Routes>
       </div>
-    </Router>
-  )
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
