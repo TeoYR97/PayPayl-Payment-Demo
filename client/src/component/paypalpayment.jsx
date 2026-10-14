@@ -18,17 +18,30 @@ const paypalpayment = () => {
   const onCreateOrder = async () => {
     try {
 
-      const response = await fetch("/paypal/craeteorder", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-      });
+      const response = await fetch(
+        "http://localhost:3000/paypal/createorder",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+
       const data = await response.json();
+
+      if (!data.orderId) {
+        throw new Error("No orderId returned by backend");
+      }
+
       return data.orderId;
 
     } catch (error) {
-      console.log("Error creating paypal order", error);
+      console.error("Error creating PayPal order:", error);
       throw error;
     }
   }
@@ -43,9 +56,8 @@ const paypalpayment = () => {
   }
 
   const onError = (error) => {
-    console.log("Paypal error", error);
-    window.location.href = "/cancel-payment";
-  }
+    console.error("PayPal error:", error);
+  };
 
 
   return (
