@@ -48,6 +48,15 @@ const paypalpayment = () => {
 
   const onApprove = async (data) => {
     try {
+      if(!data?.orderId) throw new Error("Invalid order ID");
+
+      const response = await fetch{`/paypal/capturepayment/${data.orderID}`,{
+        method: "GET",
+        headers:{
+          "Content-Type": "application/json",
+        }
+        }
+      }
 
     } catch (error) {
       console.error("Error verifying paypal", error);

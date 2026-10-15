@@ -2,7 +2,6 @@
 import express from "express";
 import got from "got";
 
-
 const router = express.Router();
 
 // Step 1: Get an access token from PayPal
@@ -30,10 +29,8 @@ const getAccessToken = async () => {
 // Step 2: Create a PayPal order
 const createorder = async (req, res) => {
     try {
-        // Get the PayPal access token
         const accessToken = await getAccessToken();
 
-        // Create the order
         const response = await got
             .post(
                 `${process.env.PAYPAL_BASE_URL}/v2/checkout/orders`,
@@ -41,10 +38,8 @@ const createorder = async (req, res) => {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                     },
-
                     json: {
                         intent: "CAPTURE",
-
                         purchase_units: [
                             {
                                 items: [
@@ -59,7 +54,6 @@ const createorder = async (req, res) => {
                                         },
                                     },
                                 ],
-
                                 amount: {
                                     currency_code: "USD",
                                     value: "10.00",
@@ -72,7 +66,6 @@ const createorder = async (req, res) => {
                                 },
                             },
                         ],
-
                         payment_source: {
                             paypal: {
                                 experience_context: {
@@ -94,17 +87,88 @@ const createorder = async (req, res) => {
             )
             .json();
 
-        
-        console.log(response.body);
-        const orderId = response.body?.id;
+        console.log("PayPal order response:", response);
 
-        return res.status(200).json({orderId});
+        const orderId = response.id;
+
+        if (!orderId) {
+            throw new Error(
+                "PayPal response does not contain an order ID"
+            );
+        }
+
+        return res.status(200).json({ orderId });
+
     } catch (err) {
-        res.status(500).json({error:"Internal server error"});
+        console.error(
+            "PayPal order creation failed:",
+            err.message
+        );
+
+        if (err.response) {
+            console.error(
+                "PayPal API response:",
+                err.response.body
+            );
+        }
+
+        return res.status(500).json({
+            error: "Failed to create PayPal order",
+        });
     }
 };
 
+// Step 3: Capture an approved PayPal order
+const capturePayment = async (req, res) => {
+    try {
+        const accessToken = await getAccessToken();
 
+        // Get the order ID from the URL
+        const { orderId } = req.params;
+
+        // Capture the approved order
+        const paymentData = await got
+            .post(
+                `${process.env.PAYPAL_BASE_URL}/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                    },
+                    json: {},
+                }
+            )
+            .json();
+
+        console.log("PayPal capture response:", paymentData);
+
+        return res.status(200).json({
+            success: true,
+            paymentData,
+        });
+
+    } catch (err) {
+        console.error(
+            "PayPal capture failed:",
+            err.message
+        );
+
+        if (err.response) {
+            console.error(
+                "PayPal API response:",
+                err.response.body
+            );
+        }
+
+        return res.status(500).json({
+            error: "Failed to capture PayPal payment",
+        });
+    }
+};
+
+// Step 4: Register routes
 router.post("/createorder", createorder);
+router.post("/capturepayment/:orderId", capturePayment);
 
+// Step 5: Export the router
 export default router;
