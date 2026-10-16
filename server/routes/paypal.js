@@ -100,22 +100,18 @@ const createorder = async (req, res) => {
         return res.status(200).json({ orderId });
 
     } catch (err) {
-        console.error(
-            "PayPal order creation failed:",
-            err.message
-        );
+    console.error("PayPal order creation failed:", err.message);
+    console.error("Underlying cause:", err.cause?.message);
 
-        if (err.response) {
-            console.error(
-                "PayPal API response:",
-                err.response.body
-            );
-        }
-
-        return res.status(500).json({
-            error: "Failed to create PayPal order",
-        });
+    if (err.response) {
+        console.error("PayPal HTTP status:", err.response.statusCode);
+        console.error("PayPal API response:", err.response.body);
     }
+
+    return res.status(500).json({
+        error: "Failed to create PayPal order",
+    });
+}
 };
 
 // Step 3: Capture an approved PayPal order
